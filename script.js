@@ -652,275 +652,307 @@ window.addEventListener('resize', () => {
         location.reload();
     }
     
-    // Handle carousel auto-scroll on resize
-    const isNowMobile = window.innerWidth <= 640;
-    if (isNowMobile && !isDragging && !autoScrollAnimation) {
-        // Start auto-scroll if we're now mobile and not already scrolling
-        autoScrollVelocity = DEFAULT_SCROLL_SPEED;
-        continuousAutoScroll();
-    } else if (!isNowMobile && autoScrollAnimation) {
-        // Stop auto-scroll if we're now desktop
-        cancelAnimationFrame(autoScrollAnimation);
-        autoScrollAnimation = null;
-    }
+    // Note: Each carousel handles its own resize events internally
 });
 
 // ---------------------------------- 
 // Parallax Carousel JavaScript
 // ---------------------------------- 
-const carouselContainer = document.querySelector('.carousel-container');
-const trackFlex = document.querySelector('.track-flex');
-const panels = Array.from(document.querySelectorAll('.panel-wide'));
-
-// --- 1. Clone panels for infinite loop ---
-const clonePanels = () => {
-    // Append clones at the end (Set 3)
-    panels.forEach(panel => {
-        const clone = panel.cloneNode(true);
-        trackFlex.appendChild(clone);
-    });
-    // Prepend clones at the start (Set 1), reversed so order stays correct
-    panels.slice().reverse().forEach(panel => {
-        const clone = panel.cloneNode(true);
-        trackFlex.insertBefore(clone, trackFlex.firstChild);
-    });
-};
-
-clonePanels();
-
-const allPanels = Array.from(document.querySelectorAll('.panel-wide'));
-const allImgs = document.querySelectorAll('.image');
-
-
-// base centering: equivalent to translateX(-50%)
-gsap.set(allImgs, { xPercent: -50 });
-
-const panelWidth = 376;          // 360px width + 16px gap
-const totalPanels = panels.length; // Number of ORIGINAL panels
-
-// --- 2. Initial position: center on ORIGINAL set (Set 2) ---
-const singleSetWidth = totalPanels * panelWidth;
-const middleSetStart = -singleSetWidth;   // start of original set
-let currentX = middleSetStart - 300;      // slight offset like your original logic
-
-let isDragging = false;
-let startX = 0;
-let velocity = 0;
-let animationId = null;
-
-// Click detection variables
-let dragStartX = 0;
-let dragStartY = 0;
-let hasMoved = false;
-let clickedPanel = null;
 const DRAG_THRESHOLD = 5; // pixels - movement less than this is considered a click
-
-gsap.set(trackFlex, { x: currentX });
-
-// --- Infinite loop correction: keep x between [-2W, 0] ---
-function checkLoop() {
-    const minX = -2 * singleSetWidth; // start of Set 3
-    const maxX = 0;                   // start of Set 1
-
-    if (currentX < minX) {
-        // too far left → jump right by one set
-        currentX += singleSetWidth;
-        // Adjust startX during drag to prevent wild spinning bug
-        if (isDragging) startX -= singleSetWidth;
-    } else if (currentX > maxX) {
-        // too far right → jump left by one set
-        currentX -= singleSetWidth;
-        // Adjust startX during drag to prevent wild spinning bug
-        if (isDragging) startX += singleSetWidth;
-    }
-}
-
-// --- Parallax ---
-function updateParallax() {
-    const maxParallax = 25; // tweak strength
-
-    allImgs.forEach((img) => {
-        const panel = img.closest('.panel-wide');
-        const panelRect = panel.getBoundingClientRect();
-        const panelCenter = panelRect.left + panelRect.width / 2;
-        const viewportCenter = window.innerWidth / 2;
-        const distance = panelCenter - viewportCenter;
-
-        // normalized distance [-1, 1]
-        const t = distance / viewportCenter;
-
-        // 👇 flip the sign: panel left (-t) => positive offset => image moves right, exposing left side
-        const shift = -50 - t * maxParallax;
-
-        gsap.set(img, { xPercent: shift, ease: "power1.out" });
-
-    });
-}
-
-
-
-// --- Drag handlers ---
-const startDrag = (pageX, pageY, target) => {
-    isDragging = true;
-    startX = pageX - currentX;
-    velocity = 0;
-    
-    // Track starting position for click detection
-    dragStartX = pageX;
-    dragStartY = pageY;
-    hasMoved = false;
-    clickedPanel = target.closest('.panel-wide');
-    
-    if (animationId) cancelAnimationFrame(animationId);
-    // Stop auto-scroll when dragging starts on mobile
-    if (autoScrollAnimation) {
-        cancelAnimationFrame(autoScrollAnimation);
-        autoScrollAnimation = null;
-    }
-    carouselContainer.style.cursor = 'grabbing';
-};
-
-const onDrag = (pageX, pageY) => {
-    if (!isDragging) return;
-    
-    // Check if movement exceeds threshold
-    const distanceX = Math.abs(pageX - dragStartX);
-    const distanceY = Math.abs(pageY - dragStartY);
-    if (distanceX > DRAG_THRESHOLD || distanceY > DRAG_THRESHOLD) {
-        hasMoved = true;
-    }
-    
-    const x = pageX - startX;
-    const delta = x - currentX;
-    velocity = delta;
-    currentX = x;
-
-    // ✅ FIX: correct the loop BEFORE we render the new x
-    checkLoop();
-    gsap.set(trackFlex, { x: currentX });
-    updateParallax();
-};
-
-const endDrag = () => {
-    if (!isDragging) return;
-    isDragging = false;
-    carouselContainer.style.cursor = 'grab';
-    
-    // Check if this was a click (no significant movement)
-    if (!hasMoved && clickedPanel) {
-        const url = clickedPanel.getAttribute('data-url');
-        if (url) {
-            window.open(url, '_blank', 'noopener,noreferrer');
-        }
-    }
-    
-    const isMobileDevice = window.innerWidth <= 640;
-    
-    if (isMobileDevice) {
-        // On mobile: continue scrolling in the direction of the last drag
-        // Normalize the velocity to a consistent speed
-        if (Math.abs(velocity) > 0.1) {
-            // Continue in the same direction as the drag
-            autoScrollVelocity = velocity > 0 ? Math.abs(DEFAULT_SCROLL_SPEED) : -Math.abs(DEFAULT_SCROLL_SPEED);
-        } else {
-            // If barely moving, use default left scroll
-            autoScrollVelocity = DEFAULT_SCROLL_SPEED;
-        }
-        // Restart continuous auto-scroll
-        continuousAutoScroll();
-    } else {
-        // On desktop: apply decay momentum as before
-        applyMomentum();
-    }
-};
-
-// Mouse events
-carouselContainer.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    startDrag(e.pageX, e.pageY, e.target);
-});
-
-document.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-        e.preventDefault();
-        onDrag(e.pageX, e.pageY);
-    }
-});
-
-document.addEventListener('mouseup', endDrag);
-
-// Touch events
-carouselContainer.addEventListener('touchstart', (e) => {
-    startDrag(e.touches[0].pageX, e.touches[0].pageY, e.target);
-});
-
-document.addEventListener('touchmove', (e) => {
-    if (isDragging) {
-        onDrag(e.touches[0].pageX, e.touches[0].pageY);
-    }
-});
-
-document.addEventListener('touchend', endDrag);
-
-// --- Momentum ---
-function applyMomentum() {
-    if (Math.abs(velocity) <= 0.1) {
-        if (animationId) cancelAnimationFrame(animationId);
-        return;
-    }
-
-    velocity *= 0.95;
-    currentX += velocity;
-
-    // ✅ FIX: correct before render
-    checkLoop();
-    gsap.set(trackFlex, { x: currentX });
-    updateParallax();
-
-    animationId = requestAnimationFrame(applyMomentum);
-}
-
-// Set initial styles
-carouselContainer.style.cursor = 'grab';
-carouselContainer.style.userSelect = 'none';
-
-// Prevent image dragging
-allImgs.forEach(img => {
-    img.addEventListener('dragstart', (e) => e.preventDefault());
-});
-
-// Initial parallax
-updateParallax();
-
-// --- Continuous auto-scroll for mobile ---
-let autoScrollAnimation = null;
-let autoScrollVelocity = -0.8; // Default scroll speed (negative = left)
 const DEFAULT_SCROLL_SPEED = -0.8;
+const panelWidth = 376; // 360px width + 16px gap
 
-function continuousAutoScroll() {
-    const isMobileDevice = window.innerWidth <= 640;
+/**
+ * Initializes a carousel with all its functionality
+ * @param {HTMLElement} carouselContainer - The carousel container element
+ * @param {number} index - The index of the carousel (0-based) to determine scroll direction
+ */
+function initializeCarousel(carouselContainer, index) {
+    const trackFlex = carouselContainer.querySelector('.track-flex');
+    const panels = Array.from(carouselContainer.querySelectorAll('.panel-wide'));
+
+    // --- 1. Clone panels for infinite loop ---
+    const clonePanels = () => {
+        // Append clones at the end (Set 3)
+        panels.forEach(panel => {
+            const clone = panel.cloneNode(true);
+            trackFlex.appendChild(clone);
+        });
+        // Prepend clones at the start (Set 1), reversed so order stays correct
+        panels.slice().reverse().forEach(panel => {
+            const clone = panel.cloneNode(true);
+            trackFlex.insertBefore(clone, trackFlex.firstChild);
+        });
+    };
     
-    if (isMobileDevice && !isDragging) {
-        currentX += autoScrollVelocity;
+    clonePanels();
+    
+    const allPanels = Array.from(carouselContainer.querySelectorAll('.panel-wide'));
+    const allImgs = carouselContainer.querySelectorAll('.image');
+    
+    // base centering: equivalent to translateX(-50%)
+    gsap.set(allImgs, { xPercent: -50 });
+    
+    const totalPanels = panels.length; // Number of ORIGINAL panels
+    
+    // --- 2. Initial position: center on ORIGINAL set (Set 2) ---
+    const singleSetWidth = totalPanels * panelWidth;
+    const middleSetStart = -singleSetWidth;   // start of original set
+    let currentX = middleSetStart - 300;      // slight offset like your original logic
+    
+    let isDragging = false;
+    let startX = 0;
+    let velocity = 0;
+    let animationId = null;
+    
+    // Click detection variables
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let hasMoved = false;
+    let clickedPanel = null;
+    
+    gsap.set(trackFlex, { x: currentX });
+
+    // --- Infinite loop correction: keep x between [-2W, 0] ---
+    function checkLoop() {
+        const minX = -2 * singleSetWidth; // start of Set 3
+        const maxX = 0;                   // start of Set 1
+    
+        if (currentX < minX) {
+            // too far left → jump right by one set
+            currentX += singleSetWidth;
+            // Adjust startX during drag to prevent wild spinning bug
+            if (isDragging) startX -= singleSetWidth;
+        } else if (currentX > maxX) {
+            // too far right → jump left by one set
+            currentX -= singleSetWidth;
+            // Adjust startX during drag to prevent wild spinning bug
+            if (isDragging) startX += singleSetWidth;
+        }
+    }
+    
+    // --- Parallax ---
+    function updateParallax() {
+        const maxParallax = 25; // tweak strength
+    
+        allImgs.forEach((img) => {
+            const panel = img.closest('.panel-wide');
+            const panelRect = panel.getBoundingClientRect();
+            const panelCenter = panelRect.left + panelRect.width / 2;
+            const viewportCenter = window.innerWidth / 2;
+            const distance = panelCenter - viewportCenter;
+    
+            // normalized distance [-1, 1]
+            const t = distance / viewportCenter;
+    
+            // 👇 flip the sign: panel left (-t) => positive offset => image moves right, exposing left side
+            const shift = -50 - t * maxParallax;
+    
+            gsap.set(img, { xPercent: shift, ease: "power1.out" });
+        });
+    }
+
+
+
+    // --- Drag handlers ---
+    const startDrag = (pageX, pageY, target) => {
+        isDragging = true;
+        startX = pageX - currentX;
+        velocity = 0;
         
-        checkLoop(); // Handle infinite loop wrapping
-        gsap.set(trackFlex, { x: currentX });
-        updateParallax();
+        // Track starting position for click detection
+        dragStartX = pageX;
+        dragStartY = pageY;
+        hasMoved = false;
+        clickedPanel = target.closest('.panel-wide');
         
-        autoScrollAnimation = requestAnimationFrame(continuousAutoScroll);
-    } else if (!isMobileDevice) {
-        // Stop auto-scroll on desktop
+        if (animationId) cancelAnimationFrame(animationId);
+        // Stop auto-scroll when dragging starts on mobile
         if (autoScrollAnimation) {
             cancelAnimationFrame(autoScrollAnimation);
             autoScrollAnimation = null;
         }
+        carouselContainer.style.cursor = 'grabbing';
+    };
+    
+    const onDrag = (pageX, pageY) => {
+        if (!isDragging) return;
+        
+        // Check if movement exceeds threshold
+        const distanceX = Math.abs(pageX - dragStartX);
+        const distanceY = Math.abs(pageY - dragStartY);
+        if (distanceX > DRAG_THRESHOLD || distanceY > DRAG_THRESHOLD) {
+            hasMoved = true;
+        }
+        
+        const x = pageX - startX;
+        const delta = x - currentX;
+        velocity = delta;
+        currentX = x;
+    
+        // ✅ FIX: correct the loop BEFORE we render the new x
+        checkLoop();
+        gsap.set(trackFlex, { x: currentX });
+        updateParallax();
+    };
+    
+    const endDrag = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        carouselContainer.style.cursor = 'grab';
+        
+        // Check if this was a click (no significant movement)
+        if (!hasMoved && clickedPanel) {
+            const url = clickedPanel.getAttribute('data-url');
+            if (url) {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            }
+        }
+        
+        const isMobileDevice = window.innerWidth <= 640;
+        
+        if (isMobileDevice) {
+            // On mobile: continue scrolling in the direction of the last drag
+            // Normalize the velocity to a consistent speed
+            if (Math.abs(velocity) > 0.1) {
+                // Continue in the same direction as the drag
+                autoScrollVelocity = velocity > 0 ? Math.abs(DEFAULT_SCROLL_SPEED) : -Math.abs(DEFAULT_SCROLL_SPEED);
+            } else {
+                // If barely moving, use default direction based on carousel index
+                autoScrollVelocity = (index % 2 === 0) ? DEFAULT_SCROLL_SPEED : -DEFAULT_SCROLL_SPEED;
+            }
+            // Restart continuous auto-scroll
+            continuousAutoScroll();
+        } else {
+            // On desktop: apply decay momentum as before
+            applyMomentum();
+        }
+    };
+
+    // --- Momentum ---
+    function applyMomentum() {
+        if (Math.abs(velocity) <= 0.1) {
+            if (animationId) cancelAnimationFrame(animationId);
+            return;
+        }
+    
+        velocity *= 0.95;
+        currentX += velocity;
+    
+        // ✅ FIX: correct before render
+        checkLoop();
+        gsap.set(trackFlex, { x: currentX });
+        updateParallax();
+    
+        animationId = requestAnimationFrame(applyMomentum);
     }
+    
+    // --- Continuous auto-scroll for mobile ---
+    let autoScrollAnimation = null;
+    // Alternate direction: even indices (0, 2, 4...) scroll left (negative), odd indices (1, 3, 5...) scroll right (positive)
+    let autoScrollVelocity = (index % 2 === 0) ? DEFAULT_SCROLL_SPEED : -DEFAULT_SCROLL_SPEED;
+    
+    function continuousAutoScroll() {
+        const isMobileDevice = window.innerWidth <= 640;
+        
+        if (isMobileDevice && !isDragging) {
+            currentX += autoScrollVelocity;
+            
+            checkLoop(); // Handle infinite loop wrapping
+            gsap.set(trackFlex, { x: currentX });
+            updateParallax();
+            
+            autoScrollAnimation = requestAnimationFrame(continuousAutoScroll);
+        } else if (!isMobileDevice) {
+            // Stop auto-scroll on desktop
+            if (autoScrollAnimation) {
+                cancelAnimationFrame(autoScrollAnimation);
+                autoScrollAnimation = null;
+            }
+        }
+    }
+    
+    // Mouse events
+    carouselContainer.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        startDrag(e.pageX, e.pageY, e.target);
+    });
+    
+    // Touch events
+    carouselContainer.addEventListener('touchstart', (e) => {
+        startDrag(e.touches[0].pageX, e.touches[0].pageY, e.target);
+    });
+    
+    // Global mouse/touch handlers for this carousel
+    const handleMouseMove = (e) => {
+        if (isDragging && carouselContainer.style.cursor === 'grabbing') {
+            e.preventDefault();
+            onDrag(e.pageX, e.pageY);
+        }
+    };
+    
+    const handleMouseUp = () => {
+        if (isDragging && carouselContainer.style.cursor === 'grabbing') {
+            endDrag();
+        }
+    };
+    
+    const handleTouchMove = (e) => {
+        if (isDragging) {
+            onDrag(e.touches[0].pageX, e.touches[0].pageY);
+        }
+    };
+    
+    const handleTouchEnd = () => {
+        if (isDragging) {
+            endDrag();
+        }
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', handleTouchEnd);
+    
+    // Set initial styles
+    carouselContainer.style.cursor = 'grab';
+    carouselContainer.style.userSelect = 'none';
+    
+    // Prevent image dragging
+    allImgs.forEach(img => {
+        img.addEventListener('dragstart', (e) => e.preventDefault());
+    });
+    
+    // Initial parallax
+    updateParallax();
+    
+    // Start auto-scroll on mobile
+    if (window.innerWidth <= 640) {
+        continuousAutoScroll();
+    }
+    
+    // Handle resize for this carousel
+    const handleResize = () => {
+        const isNowMobile = window.innerWidth <= 640;
+        if (isNowMobile && !isDragging && !autoScrollAnimation) {
+            // Restore default direction based on carousel index
+            autoScrollVelocity = (index % 2 === 0) ? DEFAULT_SCROLL_SPEED : -DEFAULT_SCROLL_SPEED;
+            continuousAutoScroll();
+        } else if (!isNowMobile && autoScrollAnimation) {
+            cancelAnimationFrame(autoScrollAnimation);
+            autoScrollAnimation = null;
+        }
+    };
+    
+    // Store resize handler for cleanup if needed
+    window.addEventListener('resize', handleResize);
 }
 
-// Start auto-scroll on mobile
-if (window.innerWidth <= 640) {
-    continuousAutoScroll();
-}
+// Initialize all carousels
+const carouselContainers = document.querySelectorAll('.carousel-container');
+carouselContainers.forEach((container, index) => {
+    initializeCarousel(container, index);
+});
 
 // ---------------------------------- 
 // Skills Section Marquee JavaScript

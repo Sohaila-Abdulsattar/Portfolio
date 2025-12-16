@@ -434,7 +434,7 @@ body.scroll-enabled {
 .carousel-container {
     width: 100%;
     overflow: hidden;
-    padding: 0px 0 48px 0;
+    padding: 0px 0 0px 0;
 }
 
 .track-wrapper {
@@ -462,6 +462,7 @@ body.scroll-enabled {
     overflow: hidden;
     background: #fff;
     position: relative;
+    box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.5);
 }
 
 .panel-wide img {
