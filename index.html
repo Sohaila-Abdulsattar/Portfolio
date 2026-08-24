@@ -4,15 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Portfolio</title>
-    <!-- Google Fonts: Inter Light -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300&display=swap" rel="stylesheet">
-    <!-- Load Tailwind CSS for simple, responsive styling of the main content -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Add Anime.js for the new text effect -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.0.2/anime.min.js"></script>
-    <!-- Link to external CSS -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -28,7 +24,7 @@
         </div>
     </div>
 
-    <!-- 2. The SCROLLABLE Hero Section -->
+    <!-- 2. The scrollable Hero Section -->
     <div id="main-content">
         <div id="hero-text-container" class="reveal-text-container" style="opacity: 0;">
             <div id="text-block" class="text-block">
@@ -37,12 +33,10 @@
         </div>
     </div>
 
-    <!-- 3. The Actual Page Content (Now handles the scroll-fade effect) -->
-    <!-- The content-section is now centered via CSS -->
+    <!-- 3. The Actual Page Content -->
     <div class="content-section" id="content-section">
         
         <h2 id="content-heading" class="content-heading">
-            <!-- WRAPPED: "I'm a" is now in a span for animation targeting -->
             <span id="static-intro">I'm a</span> 
             <span class="highlight-box" id="highlight-box">
                 ML Engineer
@@ -85,7 +79,6 @@
         <div class="carousel-container">
             <div class="track-wrapper">
                 <div class="track-flex">
-                    <!-- Original panels -->
                     <div class="panel-wide" data-url="https://github.com/Sohaila-Abdulsattar/Surviving_Uni">
                         <div class="image-container">
                             <img class="image" src="assets/images/Surviving-Uni.png" alt="A Project">
@@ -213,10 +206,10 @@
         </div>
     </div>
 
-    <!-- 7. GSAP Library for Parallax Carousel -->
+    <!-- 7. GSAP Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
-    <!-- 8. JavaScript Orchestration -->
+    <!-- 8. JavaScript -->
     <script src="script.js"></script>
 
 </body>
