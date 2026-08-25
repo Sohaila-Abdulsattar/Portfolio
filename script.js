@@ -21,7 +21,7 @@ const professions = [
     },
     { 
         title: "Designer", 
-        text: "When I'm building something technical like a website or a game, I end up spending just as much time on how it looks. That eye for design has also landed me multiple social media marketing and graphic design roles along the way."
+        text: "When I'm building something technical like a website or a game, I end up spending just as much time on how it looks. My attention to design and visuals is what's gotten me into multiple social media marketing and graphic design roles as well."
     }
 ];
 let currentProfessionIndex = 0;
