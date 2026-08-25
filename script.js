@@ -2,7 +2,6 @@ const loadingScreen = document.getElementById('loading-screen');
 const mainContent = document.getElementById('main-content');
 const textBlock = document.getElementById('text-block'); 
 
-// NEW ELEMENT REFERENCE
 const staticIntro = document.getElementById('static-intro');
 
 const highlightBox = document.getElementById('highlight-box');
@@ -17,16 +16,12 @@ const REVEAL_PHRASES = isMobile ? ["Hi,", "I'm", "Sohaila"] : ["Hi,", "I'm Sohai
 // Dynamic content data
 const professions = [
     { 
-        title: "ML Engineer", 
-        text: "I specialize in building intelligent systems across natural language processing, computer vision, and multimodal AI. My work spans dataset design, model training, evaluation, and scalable deployment, with a focus on creating AI systems that are practical, accessible, and grounded in real-world use cases."
+        title: "Researcher", 
+        text: "I'm a Global PhD Fellow in Computer Science at NYU, completing my degree across NYU's Graduate School of Arts and Science and NYU Abu Dhabi. I work on AI for software engineering at the SANAD Lab, with a focus on improving LLMs and agents for code generation. My other research interests include reinforcement learning and natural language processing. I've also ventured outside CS through interdisciplinary coursework in political science."
     },
     { 
-        title: "Full Stack Developer", 
-        text: "I create seamless user experiences powered by well-structured backends, integrating everything from dynamic front-end interfaces to scalable APIs and databases. I enjoy transforming ideas into functional, polished products that feel seamless and human-centered."
-    },
-    { 
-        title: "Graphic Designer", 
-        text: "I create modern, expressive visual designs that strengthen storytelling, branding, and user engagement. My experience spans social media campaigns, event marketing, and interface design. I approach design the same way I approach engineering: with clarity, intention, and a strong eye for detail."
+        title: "Designer", 
+        text: "When I'm building something technical like a website or a game, I end up spending just as much time on how it looks. That eye for design has also landed me multiple social media marketing and graphic design roles along the way."
     }
 ];
 let currentProfessionIndex = 0;
@@ -36,7 +31,7 @@ const DOT_ANIMATION_DURATION_MS = 2500;
 const REVEAL_ANIMATION_DURATION_MS = 1200; 
 
 // Parallax configuration
-let ANIMATION_SCROLL_HEIGHT = window.innerHeight; // Hero section is 100vh
+let ANIMATION_SCROLL_HEIGHT = window.innerHeight;
 const MAX_TRANSLATION_Y = 300; 
 const SCROLL_THRESHOLD = 0.7; 
 
