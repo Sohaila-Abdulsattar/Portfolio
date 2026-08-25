@@ -17,7 +17,7 @@ const REVEAL_PHRASES = isMobile ? ["Hi,", "I'm", "Sohaila"] : ["Hi,", "I'm Sohai
 const professions = [
     { 
         title: "Researcher", 
-        text: "I'm a Global PhD Fellow in Computer Science at NYU, completing my degree across NYU's Graduate School of Arts and Science and NYU Abu Dhabi. I work on AI for software engineering at the SANAD Lab, with a focus on improving LLMs and agents for code generation. My other research interests include reinforcement learning and natural language processing. I've also ventured outside CS through interdisciplinary coursework in political science."
+        text: "I'm a Global PhD Fellow in Computer Science at NYU, completing my degree across the NYU Graduate School of Arts and Science and NYU Abu Dhabi. I work on AI for software engineering at the SANAD Lab, with a focus on improving LLMs and agents for code generation. My other research interests include reinforcement learning and natural language processing. I've also ventured outside CS through interdisciplinary coursework in political science."
     },
     { 
         title: "Designer", 
